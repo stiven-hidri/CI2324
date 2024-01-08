@@ -3,9 +3,6 @@ from copy import deepcopy
 from enum import Enum
 import numpy as np
 
-# Rules on PDF
-
-
 class Move(Enum):
     '''
     Selects where you want to place the taken piece. The rest of the pieces are shifted
@@ -32,7 +29,6 @@ class Player(ABC):
         '''
         pass
 
-
 class Game(object):
     def __init__(self) -> None:
         self._board = np.ones((5, 5), dtype=np.uint8) * -1
@@ -52,17 +48,11 @@ class Game(object):
     
     def pprint(self):
         '''Prints the board. -1 are neutral pieces, 0 are pieces of player 0, 1 pieces of player 1'''
-        
+    
         pedine = ['🟩', '🟥', '⬜'];
-
-        #print("\n┌────┬────┬────┬────┬────┐")
-
-        for i, l in enumerate(self._board):
+        for l in self._board:
             print(f"{pedine[l[0]]}{pedine[l[1]]}{pedine[l[2]]}{pedine[l[3]]}{pedine[l[4]]}")
-            # if(i<4):
-            #    print("├────┼────┼────┼────┼────┤")
-        
-        # print("└────┴────┴────┴────┴────┘\n")
+        print()
 
     def print(self):
         '''Prints the board. -1 are neutral pieces, 0 are pieces of player 0, 1 pieces of player 1'''
@@ -113,27 +103,42 @@ class Game(object):
         players = [player1, player2]
         winner = -1
         while winner < 0:
-            self.current_player_idx += 1
-            self.current_player_idx %= len(players)
+            self.current_player_idx = 1 - self.current_player_idx
             ok = False
             while not ok:
-                from_pos, slide = players[self.current_player_idx].make_move(
-                    self)
-                ok = self.__move(from_pos, slide, self.current_player_idx)
+                from_pos, slide = players[self.current_player_idx].make_move(self)
+                ok = self.moove(from_pos, slide, self.current_player_idx)
             winner = self.check_winner()
+        
+        return winner
+    
+    def watchPlay(self, player1: Player, player2: Player) -> int:
+        '''Play the game. Returns the winning player'''
+        players = [player1, player2]
+        winner = -1
+        self.pprint()
+        while winner < 0:
+            self.current_player_idx = 1 - self.current_player_idx
+            ok = False
+            while not ok:
+                from_pos, slide = players[self.current_player_idx].make_move(self)
+                print(f"{self.current_player_idx} {from_pos} {slide}")
+                ok = self.moove(from_pos, slide, self.current_player_idx)
+            self.pprint()
+            winner = self.check_winner()
+        
         return winner
 
-    def __move(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
+    def moove(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
         '''Perform a move'''
-        if player_id > 2:
-            return False
+        assert(player_id == 0 or player_id==1)
         # Oh God, Numpy arrays
-        prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
-        acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
+        prev_value = deepcopy(self._board[(from_pos[0], from_pos[1])])
+        acceptable = self.__take((from_pos[0], from_pos[1]), player_id)
         if acceptable:
-            acceptable = self.__slide((from_pos[1], from_pos[0]), slide)
-            if not acceptable:
-                self._board[(from_pos[1], from_pos[0])] = deepcopy(prev_value)
+            acceptable = self.__slide((from_pos[0], from_pos[1]), slide)
+        if not acceptable:
+            self._board[(from_pos[0], from_pos[1])] = deepcopy(prev_value)
         return acceptable
 
     def __take(self, from_pos: tuple[int, int], player_id: int) -> bool:
