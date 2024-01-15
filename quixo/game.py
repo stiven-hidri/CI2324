@@ -3,6 +3,8 @@ from copy import deepcopy
 from enum import Enum
 import numpy as np
 
+# Rules on PDF and https://cdn.1j1ju.com/medias/a8/5e/26-quixo-rulebook.pdf
+
 class Move(Enum):
     '''
     Selects where you want to place the taken piece. The rest of the pieces are shifted
@@ -16,7 +18,6 @@ class Move(Enum):
 class Player(ABC):
     def __init__(self) -> None:
         '''You can change this for your player if you need to handle state/have memory'''
-        pass
 
     @abstractmethod
     def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
@@ -28,6 +29,7 @@ class Player(ABC):
         return values: this method shall return a tuple of X,Y positions and a move among TOP, BOTTOM, LEFT and RIGHT
         '''
         pass
+
 
 class Game(object):
     def __init__(self) -> None:
@@ -45,7 +47,7 @@ class Game(object):
         Returns the current player
         '''
         return deepcopy(self.current_player_idx)
-    
+
     def pprint(self):
         '''Prints the board. -1 are neutral pieces, 0 are pieces of player 0, 1 pieces of player 1'''
     
@@ -71,74 +73,68 @@ class Game(object):
     def check_winner(self) -> int:
         '''Check the winner. Returns the player ID of the winner if any, otherwise returns -1'''
         # for each row
+        player = self.get_current_player()
+        winner = -1
         for x in range(self._board.shape[0]):
             # if a player has completed an entire row
             if self._board[x, 0] != -1 and all(self._board[x, :] == self._board[x, 0]):
-                # return the relative id
-                return self._board[x, 0]
+                # return winner is this guy
+                winner = self._board[x, 0]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
         # for each column
         for y in range(self._board.shape[1]):
             # if a player has completed an entire column
             if self._board[0, y] != -1 and all(self._board[:, y] == self._board[0, y]):
                 # return the relative id
-                return self._board[0, y]
+                winner = self._board[0, y]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
         # if a player has completed the principal diagonal
         if self._board[0, 0] != -1 and all(
             [self._board[x, x]
                 for x in range(self._board.shape[0])] == self._board[0, 0]
         ):
             # return the relative id
-            return self._board[0, 0]
+            winner = self._board[0, 0]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
         # if a player has completed the secondary diagonal
         if self._board[0, -1] != -1 and all(
             [self._board[x, -(x + 1)]
              for x in range(self._board.shape[0])] == self._board[0, -1]
         ):
             # return the relative id
-            return self._board[0, -1]
-        return -1
+            winner = self._board[0, -1]
+        return winner
 
     def play(self, player1: Player, player2: Player) -> int:
         '''Play the game. Returns the winning player'''
         players = [player1, player2]
         winner = -1
         while winner < 0:
-            self.current_player_idx = 1 - self.current_player_idx
+            self.current_player_idx += 1
+            self.current_player_idx %= len(players)
             ok = False
             while not ok:
                 from_pos, slide = players[self.current_player_idx].make_move(self)
                 ok = self.moove(from_pos, slide, self.current_player_idx)
-            winner = self.check_winner()
-        
-        return winner
-    
-    def watchPlay(self, player1: Player, player2: Player) -> int:
-        '''Play the game. Returns the winning player'''
-        players = [player1, player2]
-        winner = -1
-        self.pprint()
-        while winner < 0:
-            self.current_player_idx = 1 - self.current_player_idx
-            ok = False
-            while not ok:
-                from_pos, slide = players[self.current_player_idx].make_move(self)
-                print(f"{self.current_player_idx} {from_pos} {slide}")
-                ok = self.moove(from_pos, slide, self.current_player_idx)
+            print(f"{self.current_player_idx} {tuple(reversed(from_pos))} {slide.name}")
             self.pprint()
             winner = self.check_winner()
-        
         return winner
 
     def moove(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
         '''Perform a move'''
-        assert(player_id == 0 or player_id==1)
+        if player_id > 2:
+            return False
         # Oh God, Numpy arrays
-        prev_value = deepcopy(self._board[(from_pos[0], from_pos[1])])
-        acceptable = self.__take((from_pos[0], from_pos[1]), player_id)
+        prev_value = deepcopy(self._board[(from_pos[1], from_pos[0])])
+        acceptable = self.__take((from_pos[1], from_pos[0]), player_id)
         if acceptable:
-            acceptable = self.__slide((from_pos[0], from_pos[1]), slide)
-        if not acceptable:
-            self._board[(from_pos[0], from_pos[1])] = deepcopy(prev_value)
+            acceptable = self.__slide((from_pos[1], from_pos[0]), slide)
+            if not acceptable:
+                self._board[(from_pos[1], from_pos[0])] = deepcopy(prev_value)
         return acceptable
 
     def __take(self, from_pos: tuple[int, int], player_id: int) -> bool:
@@ -238,3 +234,5 @@ class Game(object):
                 # move the piece down
                 self._board[(self._board.shape[0] - 1, from_pos[1])] = piece
         return acceptable
+        
+    
