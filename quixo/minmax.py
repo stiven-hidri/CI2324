@@ -1,13 +1,10 @@
 from random import choice as rndchoice, shuffle as rndshuffle
-from game import Game, Move, Player
-from numpy import sum as npsum, diag as npdiag, fliplr as npfliplr, diag as npdiag, equal as npequal, ones as npones
+from numpy import sum as npsum, diag as npdiag, fliplr as npfliplr, diag as npdiag
 from itertools import product as itproduct
 from copy import copy
-from time import time
+from game import Game, Move, Player
 
 BOARD_SIZE = 5
-
-
 
 pool_moves = [
     *itproduct([(0,1),(0,2),(0,3)], [Move.BOTTOM, Move.LEFT, Move.RIGHT]), 
@@ -41,13 +38,12 @@ class MinMaxAgent(Player):
             self.board = board
             self.move = move
 
-
     def __init__(self, depth=2, player_id=0):
         super().__init__()
         self.depth = depth
         self.player_id = player_id
         self.all_moves = pool_moves
-        self.count = 0
+        self.start = 1
 
     def get_valid_moves(self, board, player_id):
         return [x for x in self.all_moves if board[x[0]] == -1 or board[x[0]] == player_id]
@@ -57,9 +53,8 @@ class MinMaxAgent(Player):
             if board[x[0]] == -1 or board[x[0]] == player_id:
                 return x
 
-    def evaluate(self, board, player_id):
+    def evaluate(self, board):
         def get_score(id):
-            
             base = 3
             score = 0
 
@@ -106,7 +101,7 @@ class MinMaxAgent(Player):
 
             return score
         
-        my_bonus, opp_bonus = get_score(player_id), get_score(1-player_id)
+        my_bonus, opp_bonus = get_score(self.player_id), get_score(1-self.player_id)
         
         return my_bonus-opp_bonus 
 
@@ -131,58 +126,59 @@ class MinMaxAgent(Player):
     
         return False
 
-    def minimax(self, node, depth, alpha, beta, maximizing, player_id):
-
-        if depth == 0:
-            return self.evaluate(node.board, 1-player_id), node.move
-        
-        if self.check_if_winner(node.board, player_id):
+    def minimax(self, node, depth, alpha, beta, maximizing):
+        # check if opponent won
+        if self.check_if_winner(node.board, 1-self.player_id):
             return float("-inf"), node.move
 
-        if self.check_if_winner(node.board, 1-player_id):  
-            return 3**9+depth, node.move
+        # check if I won
+        if self.check_if_winner(node.board, self.player_id):  
+            return float("inf"), node.move
+
+        # when max depth is reached return the score obtained with corresponding move
+        if depth == 0:
+            return self.evaluate(node.board), node.move
+
+        # if maximizing the current player is myself, if not the current player is the opponent
+        player_id = self.player_id if maximizing else 1-self.player_id
 
         proto_game = Game() 
         moves = self.get_valid_moves(node.board, player_id)
+
         best_eval = float('-inf') if maximizing else float('inf')
+        optimal_move = node.move
 
         for m in moves:
             proto_game._board = copy(node.board)
-            proto_game.moove(tuple(reversed(m[0])), m[1], player_id)
+            proto_game._Game__move(tuple(reversed(m[0])), m[1], player_id)
             child = self.Node(proto_game._board, m)
 
-            eval, _ = self.minimax(child, depth - 1, alpha, beta, not maximizing, 1 - player_id)
+            eval, _ = self.minimax(child, depth - 1, alpha, beta, not maximizing)
 
             if maximizing and eval > best_eval:
                 optimal_move = child.move
                 best_eval = eval
 
                 alpha = max(alpha, best_eval)
-                if beta <= alpha:
-                    break
             elif (not maximizing) and eval < best_eval:
                 best_eval = eval
                 optimal_move = child.move
+
                 beta = min(beta, best_eval)
-                if beta <= alpha:
-                    break
+            
+            if beta <= alpha:
+                break
 
         return (best_eval, optimal_move)
         
     def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
-        start = time()
 
-        if self.count==0:
+        if self.start==1:
             optimal_move = self.get_first_move(game._board, self.player_id)
+            self.start=0
         else:
             root = self.Node(game._board, None)
-            d = self.depth - 2 if self.count <=1 else self.depth
-            _, optimal_move = self.minimax(root, d, float('-inf'), float('inf'), True, self.player_id)
-
-        end = time()
-        time_per_move.append(end-start)
-
-        self.count +=1
+            _, optimal_move = self.minimax(root, self.depth, float('-inf'), float('inf'), True)
 
         return tuple(reversed(optimal_move[0])), optimal_move[1]
 
@@ -191,13 +187,10 @@ def main():
 
     myAgent = MinMaxAgent(player_id=0, depth=3)
     opponent = RandomPlayer(player_id=1)
-    print(f"WINNER: {game.play(myAgent, opponent)}")
+    
+    result = game.play(myAgent, opponent)
 
-    # myAgent = MinMaxAgent(player_id=1, depth=3)
-    # opponent = RandomPlayer(player_id=0)
-    # print(f"WINNER: {game.play(opponent, myAgent)}")
-
-    print(f"AVG_MOVE_TIME: {round(sum(time_per_move)/len(time_per_move),2)}")
+    print(f"WINNER: {result}")
 
 if __name__ == '__main__':
     main()

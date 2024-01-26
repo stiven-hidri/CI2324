@@ -2,7 +2,7 @@
 NOT DONE
 
 ## Lab 2
-### optimal and random agent
+### Optimal and Random agent classes
 
 ```py
 class Agent:
@@ -327,7 +327,7 @@ PROBLEM_SIZE = [1,2,5,10]
 K=1000
 ```
 
-## RESULT
+### RESULTS
 | Problem   | Result            | maxFitness        | Calls         |
 |:---------:|:-----------------:|:-----------------:|:-------------:|
 | S=1       | Success           | 1.0               | 1217          |
@@ -354,13 +354,13 @@ Good job!!
 
 ## Lab 10
 
-## Overview on Q-Learning
+### Overview on Q-Learning
 
 The core idea behind reinforcement learning is that agents learn by interacting with the environment, receiving feedback in the form of rewards or punishments based on their actions.
 
 Q-learning is a popular technique in reinforcement learning that allows agents to learn optimal actions through trial and error. The algorithm employs a value function known as the Q-function, which represents the expected cumulative reward for taking a particular action in a given state. By iteratively updating the Q-function, Q-learning enables agents to make better decisions over time.
 
-## Main classes
+### Main classes
 
 The class **TicTacToe** allows to play the game: we have methods that print the game field, check if a move is valid, check the winner and so on.
 
@@ -369,7 +369,7 @@ The class **TicTacToeRND** implements an agent playing randomly.
 The class **TicTacToeLR** implements an agent adopting Q-learning.
 The Q-function is represented using a Q-table, a two-dimensional table where rows correspond to states, and columns correspond to actions. The Q-value for a state-action pair (s, a) in the Q-table denotes the expected cumulative reward an agent can achieve by taking action ‘a’ in state ‘s’. Initially, the Q-table is populated with zero
 
-## Training
+### Training
 
 The Q-learning algorithm follows the following iterative steps:
 1. q_table is a dictionary containing the visited (states, actions) pairs. Not visisted pairs will have a 0 q-score.
@@ -377,13 +377,13 @@ The Q-learning algorithm follows the following iterative steps:
 3. Choose an action to take based on a trade-off between exploration and exploitation. This is done using an epsilon-greedy strategy, where the agent selects a random action with a certain probability and chooses the action with the highest Q-value with a complementary probability.
 4. Perform the chosen action and observe the reward and the resulting next state.
 5. Update the Q-value of the state-action pair using the Q-learning update rule:  
-**Q(s, a) = (1 — α) * Q(s, a) + α * (R + γ * max(Q(s’, a’)))**  
-**α** (alpha) is the learning rate, **γ** (gamma) is the discount factor that determines the importance of future rewards, **R** is the immediate reward obtained, and **max(Q(s’, a’))** represents the maximum Q-value for the next state.
+**Q(s, a) = (1 — A) * Q(s, a) + A * (R + Y * max(Q(s’, a’)))**  
+**A** (alpha) is the learning rate, **Y** (gamma) is the discount factor that determines the importance of future rewards, **R** is the immediate reward obtained, and **max(Q(s’, a’))** represents the maximum Q-value for the next state.
 6. Repeat steps 2–5 until predefined number of iterations (300_000).
 
 The agent, while training, randomly starts first or second in order to learn playing in both situations.
 
-## Scoring
+### Scoring
 The rewards are exponentially spaced: first (action, states) pairs are rewarded less with respect to the final ones wich are more decisive.  
 For example if the agents wins in 4 moves the array of rewards are:  
 [0.01, 0.16, 0.49, 1.]  
@@ -393,10 +393,10 @@ Wheras if it started second and got a draw:
 [0.0001, 0.0114, 0.0413, 0.09]  
 I reward more a draw in the case the agent starts second since starting second is a disadventageous condition.
 
-## Validation
+### Validation
 In order to choose the best hyper-parameters values the validate function tried every possibile combination. Among all the best options the following configuraiton was chosen [.5, .7, .1] for learning rate, discount factor and exploration probability.
 
-## Agent code
+### Agent code
 
 ```python
 class TicTacToeRL:
@@ -569,40 +569,41 @@ def tic_tac_toe_rl_train_random(x):
     return agents[0]
 ```
 
-## Result
+### Result
 On 1000 matches the agent was able to win 98% of the times starting first and 96% of the times starting second
 
 ## Lab 10 peer reviews
-### Sento to Filippo Greco
+### Sent to to Filippo Greco
 #### Overview
 Your RL strategy consists in assigning a value to the different states with a score that is bigger or lower depending on wether the agent won or lost.
 The formula you used for updating the state values is the following:
-**Q(s) = Q(s) + α * (γ * R - Q(s))**  
-**α** (alpha) is the learning rate, **γ** (gamma) is the decay factor that determines the importance of future rewards, **R** is the immediate reward obtained and **Q(s)** is the value of the associated state **s**  
+**Q(s) = Q(s) + A * (Y * R - Q(s))**  
+**A** (alpha) is the learning rate, **Y** (gamma) is the decay factor that determines the importance of future rewards, **R** is the immediate reward obtained and **Q(s)** is the value of the associated state **s**  
 
 Each time the agent plays it take the action that will bring him to the state with higher value (it saves the couples state and state value in a dictionary).  
 
 #### Final comment
 Your final score is impressive, reaching a winning rate that is > 97%. Very good job, I cannot find any critique since you solution is woking really well.
 
-## Quixo
+# Quixo
 
-### Q-Learning
+### Q-Learning - 1st attempt
 Since i have worked on q_learning for the tictactoe lab I decided to try it on quixo.  
 Ufortunately I kept getting very modest results vs the random player (around 55% of winnings) so I tried to apply some heuristics in order to help the agent to choose the best move: give a bonus when 4 consecutive pieces have been placed, when a 4-consecutive piece of the opponent is disrupted and give a score to each single state in order to promote better moves but still no improvement at all.
 I sterted to think that maybe the low performances were due to the enourmous number of possibe states of the game.
 So I last tried to take into consideration also equivalent states (rotations of the board, flipping u/d and l/r and inverting the pieces) but still no significant boost of performances.
 So I decided to change completely the approach and I opted for the minimax algorithm with the alpha beta pruning optimization.
-I wasn't too concerned to change strategy since minimax is relatively fast to implement and I could bring the heuristics I studied before into the new model.
-I left the code in order to give an idea to the work I have done.
-### Minimax with Alpha Beta pruning
+I wasn't too concerned to change strategy since minimax is relatively fast to implement and I could bring the heuristics I studied when implementing Q-Learning into the new model.
+I left the code inside the folder "other_attempts" in order to give an idea to the work I have done. It shouldn't run since there have been updates to the game.py file and I have not kept the code udpated.
+
+### Minimax with Alpha Beta pruning - final attempt
 I immediately got very high results with a first version versus the random player and so I decided to keep going and improve the performances of the code.
 
 ### Key points
 **Evaluation**: Here there is the code of the evaluation function:
 
 ```python
-def evaluate(self, board, player_id):
+def evaluate(self, board):
         def get_score(id):
             
             base = 3
@@ -651,70 +652,73 @@ def evaluate(self, board, player_id):
 
             return score
         
-        my_bonus, opp_bonus = get_score(player_id), get_score(1-player_id)
+        my_bonus, opp_bonus = get_score(self.player_id), get_score(1-self.player_id)
         
         return my_bonus-opp_bonus 
 ```
-The idea is to give a bonus for each group of pieces owned in rows, columns and diagonals which exponentially increases with the number of pieces. Doing so promotes having more pieces in the board but mainly reaching 5 consecutive pieces. We calculate with the same strategy also the score of the opponent and we subctruct it to the score of the player. In this way we promote winning and keeping the opponent in a loosing state.
-The code isn't scalable but I written it in this way since I wanted to maximize its performances (for loops add overheads) since minimax is computationally expensive the more the maximum depth increseas
+The idea is to give a bonus for each group of pieces owned in rows, columns and diagonals which exponentially increases with the number of pieces. Doing so promotes having more pieces in the board but mainly reaching 5 consecutive pieces. We calculate with the same strategy also the score of the opponent and we subtruct it to the score of the player. In this way we promote winning and keeping the opponent in a loosing state.
+Positive scores are indicating a winning state for my agent whilst negative score indicate a winning state for the opponent
+The code isn't scalable but I written it in this way since I tried to make it faster since this function will bee called many times
 
 **minimax algorithm**: here we can see the implementation of the minimax algoirthm. I tried various settings and the following proved to be the most efficient.
 The terminal conditions for the recursive functions are either one of the 2 players won or the maximum depth is reached.
-I iterate through the moves and generate the state that comes with the current move: doing so i avoid generating states (which is computationally expensive) when i don't need to traverse the subtree thanks to alpha beta pruning. The minimax function also returns with the state value the related action. In this way it immediately and elegantely returns the action to take at the end.
+I iterate through the moves and generate the state that comes with the current move: doing so i avoid generating states (which is computationally expensive) that i don't need to generate when i'm not traversing some subtree thanks to alpha beta pruning. The minimax function returns both with the state value the related move. In this way it immediately and elegantely returns the action to take at the end.
 If it is the first time playing we just make a move.
+
 ```py
 def make_move(self, game: 'Game') -> tuple[tuple[int, int], Move]:
-        start = time()
 
-        if self.count==0:
+        if self.start==1:
             optimal_move = self.get_first_move(game._board, self.player_id)
+            self.start=0
         else:
             root = self.Node(game._board, None)
-            d = self.depth - 2 if self.count <=1 else self.depth
-            _, optimal_move = self.minimax(root, d, float('-inf'), float('inf'), True, self.player_id)
-
-        end = time()
-        time_per_move.append(end-start)
-
-        self.count +=1
+            _, optimal_move = self.minimax(root, self.depth, float('-inf'), float('inf'), True)
 
         return tuple(reversed(optimal_move[0])), optimal_move[1]
 
-def minimax(self, node, depth, alpha, beta, maximizing, player_id):
-
-        if depth == 0:
-            return self.evaluate(node.board, 1-player_id), node.move
-        
-        if self.check_if_winner(node.board, player_id):
+def minimax(self, node, depth, alpha, beta, maximizing):
+        # check if opponent won
+        if self.check_if_winner(node.board, 1-self.player_id):
             return float("-inf"), node.move
 
-        if self.check_if_winner(node.board, 1-player_id):  
-            return 3**9+depth, node.move
+        # check if I won
+        if self.check_if_winner(node.board, self.player_id):  
+            return float("inf"), node.move
+
+        # when max depth is reached return the score obtained with corresponding move
+        if depth == 0:
+            return self.evaluate(node.board), node.move
+
+        # if maximizing the current player is myself, if not the current player is the opponent
+        player_id = self.player_id if maximizing else 1-self.player_id
 
         proto_game = Game() 
         moves = self.get_valid_moves(node.board, player_id)
+
         best_eval = float('-inf') if maximizing else float('inf')
+        optimal_move = node.move
 
         for m in moves:
             proto_game._board = copy(node.board)
-            proto_game.moove(tuple(reversed(m[0])), m[1], player_id)
+            proto_game._Game__move(tuple(reversed(m[0])), m[1], player_id)
             child = self.Node(proto_game._board, m)
 
-            eval, _ = self.minimax(child, depth - 1, alpha, beta, not maximizing, 1 - player_id)
+            eval, _ = self.minimax(child, depth - 1, alpha, beta, not maximizing)
 
             if maximizing and eval > best_eval:
                 optimal_move = child.move
                 best_eval = eval
 
                 alpha = max(alpha, best_eval)
-                if beta <= alpha:
-                    break
             elif (not maximizing) and eval < best_eval:
                 best_eval = eval
                 optimal_move = child.move
+
                 beta = min(beta, best_eval)
-                if beta <= alpha:
-                    break
+            
+            if beta <= alpha:
+                break
 
         return (best_eval, optimal_move)
 
